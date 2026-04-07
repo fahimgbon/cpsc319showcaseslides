@@ -1,0 +1,2866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPSC 319 Software Engineering Project Showcase</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23002145'/%3E%3Ccircle cx='18' cy='18' r='10' fill='%230055B7'/%3E%3Ccircle cx='45' cy='44' r='13' fill='%2300C9A7'/%3E%3Ctext x='32' y='39' text-anchor='middle' font-family='Arial,sans-serif' font-size='19' font-weight='700' fill='white'%3E319%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    :root {
+      --navy: #002145;
+      --blue: #0055B7;
+      --teal: #00C9A7;
+      --lavender: #C4B5FF;
+      --sky: #93C5FD;
+      --mint: #6EE7B7;
+      --peach: #FDBA74;
+      --coral: #FF6B6B;
+      --light-start: #FAFAFA;
+      --light-end: #F0F4FF;
+      --text: #0B2441;
+      --muted: #4E6481;
+      --muted-dark: rgba(255, 255, 255, 0.76);
+      --glass-bg: rgba(255, 255, 255, 0.60);
+      --glass-border: rgba(255, 255, 255, 0.80);
+      --glass-shadow: 0 8px 40px rgba(0, 33, 69, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      --glass-dark-bg: rgba(255, 255, 255, 0.11);
+      --glass-dark-border: rgba(255, 255, 255, 0.18);
+      --glass-dark-shadow: 0 18px 54px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+      --blur: blur(24px);
+      --spring: cubic-bezier(0.16, 1, 0.3, 1);
+      --slide-ease: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: "Plus Jakarta Sans", sans-serif;
+      background: linear-gradient(135deg, var(--light-start) 0%, var(--light-end) 100%);
+      color: var(--text);
+    }
+
+    body.ambient-active {
+      cursor: default;
+    }
+
+    button {
+      font: inherit;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      padding: 0;
+      margin: 0;
+    }
+
+    .mono {
+      font-family: "DM Mono", monospace;
+    }
+
+    #presentation {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    #stage {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      padding: clamp(26px, 3vw, 54px);
+      color: var(--text);
+      background: linear-gradient(135deg, var(--light-start) 0%, var(--light-end) 100%);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transform: scale(0.97);
+      filter: blur(6px);
+      transition:
+        opacity 480ms var(--slide-ease),
+        transform 480ms var(--slide-ease),
+        filter 480ms var(--slide-ease);
+    }
+
+    .slide::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0, 33, 69, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 33, 69, 0.03) 1px, transparent 1px);
+      background-size: 44px 44px;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .slide.theme-dark {
+      color: #FFFFFF;
+      background:
+        radial-gradient(circle at 14% 10%, rgba(0, 85, 183, 0.24), transparent 30%),
+        radial-gradient(circle at 82% 80%, rgba(0, 201, 167, 0.16), transparent 34%),
+        var(--navy);
+    }
+
+    .slide.theme-dark::before {
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    }
+
+    .slide.is-active,
+    .slide.is-exiting {
+      visibility: visible;
+    }
+
+    .slide.is-active {
+      opacity: 1;
+      pointer-events: auto;
+      z-index: 2;
+      transform: translateY(0);
+      filter: blur(0);
+    }
+
+    .slide.is-exiting {
+      opacity: 0;
+      z-index: 1;
+      transform: scale(0.97);
+      filter: blur(4px);
+    }
+
+    .slide-shell {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      height: 100%;
+      display: grid;
+      gap: clamp(18px, 2vw, 28px);
+    }
+
+    .orb-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .orb {
+      position: absolute;
+      width: var(--size);
+      height: var(--size);
+      border-radius: 50%;
+      filter: blur(130px);
+      opacity: var(--opacity);
+      background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.76), var(--orb-color));
+      animation: orbFloat var(--duration) ease-in-out infinite alternate;
+      animation-delay: var(--delay);
+    }
+
+    @keyframes orbFloat {
+      from {
+        transform: translate3d(0, 0, 0) scale(1);
+      }
+      to {
+        transform: translate3d(var(--drift-x), var(--drift-y), 0) scale(1.08);
+      }
+    }
+
+    .glass-card,
+    .glass-pill,
+    .flow-card,
+    .mini-card,
+    .chrome-pill,
+    .map-card,
+    .notes-panel,
+    .shortcut-card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+      border-radius: 22px;
+    }
+
+    .slide.theme-dark .glass-card,
+    .slide.theme-dark .glass-pill,
+    .slide.theme-dark .mini-card {
+      background: var(--glass-dark-bg);
+      border-color: var(--glass-dark-border);
+      box-shadow: var(--glass-dark-shadow);
+    }
+
+    .client-wash {
+      background: rgba(0, 85, 183, 0.06);
+    }
+
+    .celebrate-wash {
+      background: rgba(0, 201, 167, 0.08);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin: 0;
+    }
+
+    .slide.theme-dark .eyebrow {
+      color: rgba(255, 255, 255, 0.78);
+    }
+
+    .teal-text {
+      color: var(--teal);
+    }
+
+    .display-title {
+      margin: 0;
+      font-size: clamp(56px, 6vw, 96px);
+      line-height: 0.94;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: clamp(44px, 4.8vw, 78px);
+      line-height: 1.02;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+    }
+
+    .body-text {
+      margin: 0;
+      font-size: clamp(18px, 1.4vw, 22px);
+      line-height: 1.6;
+      color: var(--muted);
+    }
+
+    .lead {
+      margin: 0;
+      font-size: clamp(20px, 1.8vw, 28px);
+      line-height: 1.55;
+      color: var(--muted);
+    }
+
+    .slide.theme-dark .body-text,
+    .slide.theme-dark .lead {
+      color: var(--muted-dark);
+    }
+
+    .subtle-note {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.6;
+      color: rgba(11, 36, 65, 0.62);
+      font-style: italic;
+    }
+
+    .slide.theme-dark .subtle-note {
+      color: rgba(255, 255, 255, 0.68);
+    }
+
+    .badge-row,
+    .pill-row,
+    .member-row,
+    .stack-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .badge,
+    .chip,
+    .role-pill,
+    .client-pill,
+    .team-chip,
+    .station-pill,
+    .highlight-tag,
+    .metric-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+    }
+
+    .badge,
+    .client-pill,
+    .metric-pill {
+      background: rgba(0, 85, 183, 0.10);
+      color: var(--blue);
+    }
+
+    .highlight-tag {
+      background: rgba(0, 201, 167, 0.14);
+      color: #038A74;
+    }
+
+    .chip,
+    .team-chip,
+    .station-pill {
+      background: rgba(0, 33, 69, 0.06);
+      color: var(--text);
+      letter-spacing: 0.03em;
+      text-transform: none;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 10px 14px;
+    }
+
+    .team-chip {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .slide.theme-dark .badge,
+    .slide.theme-dark .client-pill,
+    .slide.theme-dark .metric-pill {
+      background: rgba(255, 255, 255, 0.13);
+      color: #FFFFFF;
+    }
+
+    .slide.theme-dark .chip,
+    .slide.theme-dark .team-chip,
+    .slide.theme-dark .station-pill {
+      background: rgba(255, 255, 255, 0.12);
+      color: #FFFFFF;
+    }
+
+    .full-center {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      text-align: center;
+    }
+
+    .narrow-copy {
+      max-width: 860px;
+    }
+
+    .stat-value {
+      margin: 0;
+      font-size: clamp(72px, 16vw, 120px);
+      line-height: 0.9;
+      font-weight: 500;
+      color: var(--blue);
+    }
+
+    .stat-value.teal {
+      color: var(--teal);
+    }
+
+    .stat-caption {
+      margin: 0;
+      font-size: clamp(30px, 3vw, 46px);
+      line-height: 1.15;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+    }
+
+    .split-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+      gap: 28px;
+      align-items: center;
+      height: 100%;
+    }
+
+    .panel-stack {
+      display: grid;
+      gap: 16px;
+      align-content: center;
+    }
+
+    .stat-stack-pill {
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .stat-stack-pill span:last-child {
+      color: var(--blue);
+      font-size: 22px;
+    }
+
+    .slide.theme-dark .stat-stack-pill {
+      color: #FFFFFF;
+    }
+
+    .grid-three {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 22px;
+      align-content: center;
+      height: 100%;
+    }
+
+    .grid-two-by-two {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 22px;
+      align-content: center;
+      height: 100%;
+    }
+
+    .card-pad {
+      padding: 28px;
+    }
+
+    .profile-card,
+    .thank-you-card {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-height: 250px;
+    }
+
+    .nameplate {
+      font-size: clamp(28px, 2.6vw, 40px);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.025em;
+      margin: 0;
+    }
+
+    .horizontal-flow {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 26px;
+    }
+
+    .flow-row {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .flow-row::before {
+      content: "";
+      position: absolute;
+      left: 6%;
+      right: 6%;
+      top: 50%;
+      height: 2px;
+      background: linear-gradient(90deg, rgba(0, 85, 183, 0.18), rgba(0, 201, 167, 0.52), rgba(0, 85, 183, 0.18));
+      z-index: 0;
+    }
+
+    .flow-card {
+      position: relative;
+      z-index: 1;
+      padding: 24px 20px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      border-left: 5px solid var(--accent);
+    }
+
+    .flow-card p,
+    .mini-card p,
+    .thank-you-card p,
+    .profile-card p {
+      margin: 0;
+    }
+
+    .stacked-layout {
+      height: 100%;
+      max-width: 980px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 22px;
+    }
+
+    .pill-list-item {
+      display: grid;
+      grid-template-columns: auto 132px 1fr auto;
+      gap: 18px;
+      align-items: center;
+      padding: 22px 24px;
+    }
+
+    .pill-list-item .emoji {
+      font-size: 26px;
+      line-height: 1;
+    }
+
+    .pill-list-item .time {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--blue);
+    }
+
+    .pill-list-item .title {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .pill-list-item .tail {
+      font-size: 14px;
+      color: var(--muted);
+      justify-self: end;
+      white-space: nowrap;
+    }
+
+    .slide.theme-dark .pill-list-item .time,
+    .slide.theme-dark .pill-list-item .tail {
+      color: rgba(255, 255, 255, 0.74);
+    }
+
+    .quote-line {
+      font-size: clamp(28px, 3.5vw, 48px);
+      line-height: 1.2;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      margin: 0;
+      max-width: 1100px;
+    }
+
+    .underline-accent {
+      display: inline-block;
+      border-bottom: 6px solid rgba(0, 201, 167, 0.7);
+      padding-bottom: 6px;
+    }
+
+    .dark-punch {
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      gap: 18px;
+    }
+
+    .scene-slot {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .scene-slot canvas {
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
+    }
+
+    .opener-shell {
+      position: relative;
+      height: 100%;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 0 0 8vh;
+      isolation: isolate;
+    }
+
+    .opener-shell::before {
+      content: "";
+      position: absolute;
+      left: 18%;
+      right: 18%;
+      top: 22%;
+      height: 34vh;
+      border-radius: 999px;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(0, 201, 167, 0.24), rgba(0, 85, 183, 0.10) 42%, transparent 72%);
+      filter: blur(68px);
+      opacity: 0;
+      animation: openerGlowIn 1.8s ease 0.35s forwards, openerHaloDrift 8s ease-in-out 1.6s infinite alternate;
+      z-index: 1;
+    }
+
+    .opener-shell::after {
+      content: "";
+      position: absolute;
+      inset: 10% 8%;
+      border-radius: 34px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 18%, transparent 82%, rgba(255, 255, 255, 0.02));
+      z-index: 1;
+    }
+
+    .intro-lockup {
+      position: relative;
+      z-index: 3;
+      opacity: 0;
+      transform: translateY(44px) scale(0.92);
+      animation: openerReveal 1.45s var(--spring) 2.35s forwards;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      max-width: 1100px;
+    }
+
+    .opener-kicker {
+      margin: 0;
+      font-size: 12px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.72);
+    }
+
+    .opener-ghost {
+      margin: 0;
+      font-family: "DM Mono", monospace;
+      font-size: clamp(92px, 16vw, 240px);
+      line-height: 0.82;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.05);
+      text-shadow: 0 0 44px rgba(0, 201, 167, 0.14);
+      transform: translateY(8px);
+      animation: openerGhostFloat 8.5s ease-in-out 3.2s infinite alternate;
+      user-select: none;
+    }
+
+    .opener-subline {
+      font-size: clamp(16px, 1.65vw, 24px);
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.88);
+    }
+
+    .opener-pill {
+      margin-top: 18px;
+      padding: 16px 24px;
+      font-size: 14px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.92);
+      opacity: 0;
+      transform: translateY(28px) scale(0.96);
+      animation: openerPillReveal 1.2s var(--spring) 3.1s forwards;
+    }
+
+    @keyframes openerReveal {
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes openerPillReveal {
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes openerGlowIn {
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes openerHaloDrift {
+      from {
+        transform: translate3d(-12px, -8px, 0) scale(0.96);
+      }
+      to {
+        transform: translate3d(14px, 12px, 0) scale(1.08);
+      }
+    }
+
+    @keyframes openerGhostFloat {
+      from {
+        transform: translateY(8px) scale(0.99);
+      }
+      to {
+        transform: translateY(-8px) scale(1.01);
+      }
+    }
+
+    .ambient-home {
+      height: 100%;
+      display: grid;
+      grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+      gap: 24px;
+      align-items: center;
+    }
+
+    .ambient-home-copy {
+      align-self: end;
+      max-width: 560px;
+      padding-bottom: 6vh;
+    }
+
+    .ambient-home-card {
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .spotlight-card {
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .spotlight-team-stack {
+      display: grid;
+      gap: 16px;
+      align-content: center;
+    }
+
+    .mini-card {
+      padding: 18px 20px;
+      border-left: 5px solid var(--accent);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .mini-title {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .mini-copy {
+      font-size: 16px;
+      line-height: 1.5;
+      color: var(--muted);
+    }
+
+    .team-layout-a {
+      height: 100%;
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr);
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .team-layout-b {
+      height: 100%;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 24px;
+    }
+
+    .team-banner {
+      padding: 28px 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      border-left: 6px solid var(--accent);
+    }
+
+    .team-main-card {
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      border-left: 6px solid var(--accent);
+    }
+
+    .team-sidebar {
+      display: grid;
+      gap: 18px;
+      align-content: center;
+    }
+
+    .team-side-card {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .team-bottom {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 24px;
+    }
+
+    .feature-list {
+      margin: 0;
+      padding-left: 20px;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.7;
+    }
+
+    .feature-list li + li {
+      margin-top: 6px;
+    }
+
+    .station-pill {
+      justify-content: center;
+      background: rgba(0, 85, 183, 0.10);
+      color: var(--blue);
+      font-weight: 700;
+    }
+
+    .slide.theme-dark .station-pill {
+      background: rgba(255, 255, 255, 0.13);
+      color: #FFFFFF;
+    }
+
+    .title-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .center-pair {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 24px;
+      width: min(1040px, 100%);
+    }
+
+    .award-wrap,
+    .award-full-center,
+    .award-grid,
+    .award-stack {
+      position: relative;
+      z-index: 2;
+      height: 100%;
+    }
+
+    .award-wrap {
+      display: grid;
+      align-items: center;
+    }
+
+    .award-full-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      text-align: center;
+    }
+
+    .award-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 24px;
+      align-items: center;
+    }
+
+    .award-stack {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 22px;
+      max-width: 980px;
+      margin: 0 auto;
+    }
+
+    .award-card {
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      border-left: 6px solid var(--accent);
+    }
+
+    .award-icon {
+      font-size: clamp(40px, 5vw, 70px);
+      line-height: 1;
+      margin: 0;
+    }
+
+    .award-kicker {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--teal);
+    }
+
+    .award-caption {
+      margin: 0;
+      font-size: clamp(18px, 1.7vw, 24px);
+      line-height: 1.55;
+      color: var(--muted);
+    }
+
+    .slide.theme-dark .award-caption {
+      color: rgba(255, 255, 255, 0.76);
+    }
+
+    .confetti-layer {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .confetti-piece {
+      position: absolute;
+      top: -12%;
+      left: var(--left);
+      width: var(--width);
+      height: var(--height);
+      background: var(--color);
+      border-radius: var(--radius);
+      opacity: 0.88;
+      transform: translate3d(0, 0, 0) rotate(0deg);
+      animation: confettiFall var(--duration) linear infinite;
+      animation-delay: var(--delay);
+      box-shadow: 0 8px 18px rgba(0, 33, 69, 0.10);
+    }
+
+    @keyframes confettiFall {
+      from {
+        transform: translate3d(0, -10vh, 0) rotate(0deg);
+      }
+      to {
+        transform: translate3d(var(--drift), 118vh, 0) rotate(560deg);
+      }
+    }
+
+    [data-reveal] {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+
+    [data-reveal].reveal-in {
+      animation: revealUp 680ms var(--spring) forwards;
+    }
+
+    @keyframes revealUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .chrome {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      pointer-events: none;
+    }
+
+    .chrome > * {
+      pointer-events: auto;
+    }
+
+    .chrome-pill {
+      position: fixed;
+      padding: 14px 18px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text);
+      cursor: pointer;
+      transition: transform 220ms ease, box-shadow 220ms ease, opacity 220ms ease;
+    }
+
+    .chrome-pill:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 36px rgba(0, 33, 69, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    }
+
+    #helpButton {
+      top: 22px;
+      left: 22px;
+      width: 52px;
+      height: 52px;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    #notesButton {
+      bottom: 22px;
+      left: 22px;
+      gap: 12px;
+      min-height: 54px;
+    }
+
+    .notes-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 999px;
+      background: rgba(0, 85, 183, 0.12);
+      color: var(--blue);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .notes-label {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    #ambientIndicator {
+      position: fixed;
+      top: 22px;
+      right: 22px;
+      padding: 14px 18px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--teal);
+      opacity: 0;
+      transform: translateY(-8px);
+      transition: opacity 220ms ease, transform 220ms ease;
+      pointer-events: none;
+    }
+
+    body.ambient-active #ambientIndicator {
+      opacity: 1;
+      transform: translateY(0);
+      animation: ambientPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes ambientPulse {
+      0%, 100% {
+        box-shadow: 0 8px 40px rgba(0, 33, 69, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      }
+      50% {
+        box-shadow: 0 12px 44px rgba(0, 201, 167, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.94);
+      }
+    }
+
+    #counterButton {
+      bottom: 22px;
+      right: 22px;
+      min-width: 136px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+      padding: 14px 18px 12px;
+    }
+
+    .counter-top {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .counter-progress {
+      width: 100%;
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(0, 33, 69, 0.10);
+      overflow: hidden;
+    }
+
+    .counter-progress-bar {
+      height: 100%;
+      width: 0;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--blue), var(--teal));
+      transition: width 320ms ease;
+    }
+
+    .counter-ambient-icon {
+      color: var(--teal);
+      font-size: 14px;
+      display: none;
+    }
+
+    body.ambient-active .counter-ambient-icon {
+      display: inline;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      opacity: 0;
+      pointer-events: none;
+      background: rgba(0, 33, 69, 0.88);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      transition: opacity 240ms ease;
+    }
+
+    .overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .overlay-panel {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      padding: 34px clamp(22px, 4vw, 54px) 28px;
+      color: #FFFFFF;
+    }
+
+    .overlay-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .overlay-title {
+      margin: 0;
+      font-size: clamp(34px, 4vw, 58px);
+      font-weight: 800;
+      letter-spacing: -0.025em;
+    }
+
+    .overlay-close {
+      width: 54px;
+      height: 54px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      color: #FFFFFF;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    .shortcut-card .overlay-close,
+    .notes-panel .overlay-close {
+      color: var(--text);
+      background: rgba(0, 33, 69, 0.06);
+      border: 1px solid rgba(0, 33, 69, 0.10);
+    }
+
+    .map-grid {
+      flex: 1;
+      overflow: auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      padding-right: 4px;
+    }
+
+    .map-card {
+      text-align: left;
+      color: #FFFFFF;
+      cursor: pointer;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: transform 180ms ease, border-color 180ms ease;
+      border-color: rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.10);
+      box-shadow: none;
+    }
+
+    .map-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .map-card.active {
+      border-color: rgba(0, 85, 183, 0.9);
+      box-shadow: 0 0 0 2px rgba(0, 85, 183, 0.35);
+    }
+
+    .map-number {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.72);
+    }
+
+    .map-card h3 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.25;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .map-tag {
+      align-self: flex-start;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 82;
+      display: grid;
+      place-items: center;
+      opacity: 0;
+      pointer-events: none;
+      background: rgba(0, 33, 69, 0.42);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: opacity 240ms ease;
+      padding: 24px;
+    }
+
+    .modal.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .shortcut-card {
+      width: min(560px, 100%);
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      color: var(--text);
+    }
+
+    .shortcut-list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .shortcut-item {
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      gap: 16px;
+      align-items: center;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    .shortcut-key {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      border-radius: 12px;
+      background: rgba(0, 33, 69, 0.06);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0 12px;
+    }
+
+    .notes-drawer {
+      position: fixed;
+      left: 20px;
+      right: 20px;
+      bottom: 20px;
+      z-index: 75;
+      transform: translateY(calc(100% + 28px));
+      transition: transform 320ms var(--spring);
+      pointer-events: none;
+    }
+
+    .notes-drawer.open {
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .notes-panel {
+      padding: 24px 26px 28px;
+      background: rgba(250, 248, 255, 0.95);
+      box-shadow: 0 18px 56px rgba(0, 33, 69, 0.18);
+      max-height: 50vh;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .notes-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .notes-title {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .notes-body {
+      white-space: pre-wrap;
+      overflow: auto;
+      line-height: 1.75;
+      font-size: 16px;
+      color: var(--muted);
+      padding-right: 6px;
+    }
+
+    .notes-body.empty {
+      color: rgba(11, 36, 65, 0.58);
+      font-style: italic;
+    }
+
+    .muted-divider {
+      width: 100%;
+      height: 1px;
+      background: rgba(0, 33, 69, 0.08);
+    }
+
+    @media (max-width: 1180px) {
+      .grid-three {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .flow-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .flow-row::before {
+        display: none;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .split-layout,
+      .team-layout-a,
+      .center-pair,
+      .award-grid,
+      .ambient-home,
+      .team-bottom,
+      .grid-two-by-two {
+        grid-template-columns: 1fr;
+      }
+
+      .grid-three {
+        grid-template-columns: 1fr;
+      }
+
+      .pill-list-item {
+        grid-template-columns: 1fr;
+        align-items: flex-start;
+      }
+
+      .pill-list-item .tail {
+        justify-self: start;
+      }
+
+      .flow-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 820px) {
+      .slide {
+        padding: 20px;
+      }
+
+      .display-title {
+        font-size: clamp(42px, 11vw, 74px);
+      }
+
+      .section-title {
+        font-size: clamp(34px, 9vw, 58px);
+      }
+
+      .lead,
+      .body-text {
+        font-size: 16px;
+      }
+
+      .stat-value {
+        font-size: clamp(54px, 20vw, 94px);
+      }
+
+      #counterButton {
+        min-width: 110px;
+      }
+
+      .notes-label {
+        display: none;
+      }
+
+      .chrome-pill {
+        padding: 12px 14px;
+      }
+
+      .shortcut-item {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="presentation">
+    <div id="stage"></div>
+    <div class="chrome">
+      <button id="helpButton" class="chrome-pill" aria-label="Open keyboard shortcuts">?</button>
+      <button id="notesButton" class="chrome-pill" aria-label="Toggle speaker notes">
+        <span class="notes-icon">N</span>
+        <span class="notes-label">Speaker Notes</span>
+      </button>
+      <div id="ambientIndicator" class="chrome-pill" aria-hidden="true">▶ AMBIENT</div>
+      <button id="counterButton" class="chrome-pill" aria-label="Open slide map">
+        <div class="counter-top">
+          <span class="counter-ambient-icon" id="counterAmbientIcon">▶</span>
+          <span id="counterText">1 / 32</span>
+        </div>
+        <div class="counter-progress">
+          <div id="counterProgressBar" class="counter-progress-bar"></div>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <div id="slideMapOverlay" class="overlay" aria-hidden="true">
+    <div class="overlay-panel">
+      <div class="overlay-header">
+        <div>
+          <p class="eyebrow">Slide Map</p>
+          <h2 class="overlay-title">Jump Anywhere</h2>
+        </div>
+        <button id="closeMapButton" class="overlay-close" aria-label="Close slide map">×</button>
+      </div>
+      <div id="mapGrid" class="map-grid"></div>
+    </div>
+  </div>
+
+  <div id="shortcutModal" class="modal" aria-hidden="true">
+    <div class="shortcut-card">
+      <div class="overlay-header">
+        <div>
+          <p class="eyebrow">Keyboard Shortcuts</p>
+          <h2 class="notes-title">How To Drive The Deck</h2>
+        </div>
+        <button id="closeHelpButton" class="overlay-close" aria-label="Close shortcuts">×</button>
+      </div>
+      <div class="shortcut-list">
+        <div class="shortcut-item"><div class="shortcut-key">← / →</div><div>Move backward or forward one slide.</div></div>
+        <div class="shortcut-item"><div class="shortcut-key">Click Halves</div><div>Click the left half of the screen to go back, or the right half to advance.</div></div>
+        <div class="shortcut-item"><div class="shortcut-key">A</div><div>Toggle ambient mode. Ambient mode auto-advances every 8 seconds and skips ceremony-only slides.</div></div>
+        <div class="shortcut-item"><div class="shortcut-key">N</div><div>Open or close the speaker notes drawer.</div></div>
+        <div class="shortcut-item"><div class="shortcut-key">?</div><div>Open this shortcut panel.</div></div>
+        <div class="shortcut-item"><div class="shortcut-key">Esc</div><div>Close the slide map, the shortcut panel, or the speaker notes drawer.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="notesDrawer" class="notes-drawer" aria-hidden="true">
+    <div class="notes-panel">
+      <div class="notes-header">
+        <div>
+          <p class="eyebrow">Speaker Notes</p>
+          <h3 id="notesTitle" class="notes-title">Slide 1</h3>
+        </div>
+        <button id="closeNotesButton" class="overlay-close" aria-label="Close notes">×</button>
+      </div>
+      <div class="muted-divider"></div>
+      <div id="notesBody" class="notes-body"></div>
+    </div>
+  </div>
+
+  <script>
+    const awards = [
+      {
+        icon: "🏆",
+        title: "Best Overall Project",
+        accent: "#00C9A7",
+        description: "The all-around standout: product thinking, execution, polish, and user value working together as one finished piece of software.",
+        detail: "Presented to the team that made the strongest case that they shipped something real, useful, and complete.",
+        layout: "split"
+      },
+      {
+        icon: "🎤",
+        title: "Best Presentation",
+        accent: "#0055B7",
+        description: "For the team that turned a demo into a story, owned the room, and made the audience instantly understand why the work mattered.",
+        detail: "Clear narrative. Confident delivery. A presentation people will still be talking about after the showcase.",
+        layout: "center"
+      },
+      {
+        icon: "🎨",
+        title: "Best Design",
+        accent: "#C4B5FF",
+        description: "Celebrating the team whose product felt most intentional, cohesive, and delightful from first impression to final flow.",
+        detail: "Thoughtful UX, visual consistency, and a clear point of view in every interaction.",
+        layout: "grid"
+      },
+      {
+        icon: "⚙️",
+        title: "Best Technical Implementation",
+        accent: "#93C5FD",
+        description: "For the team whose engineering depth, architecture, and execution raised the technical bar for the room.",
+        detail: "Strong systems thinking, smart tradeoffs, and implementation quality that stands up under scrutiny.",
+        layout: "split-reverse"
+      },
+      {
+        icon: "💡",
+        title: "Most Impactful",
+        accent: "#FDBA74",
+        description: "For the project with the clearest potential to matter: the work most likely to improve lives, workflows, or outcomes for the people it serves.",
+        detail: "A reminder that shipping software is great, but shipping something that changes a real situation is even better.",
+        layout: "stack"
+      }
+    ];
+
+    function renderOrbs(orbs) {
+      if (!orbs || !orbs.length) return "";
+      return `
+        <div class="orb-layer">
+          ${orbs.map((orb) => `
+            <div
+              class="orb"
+              style="
+                --size: ${orb.size}px;
+                --orb-color: ${orb.color};
+                --opacity: ${orb.opacity};
+                --duration: ${orb.duration}s;
+                --delay: ${orb.delay}s;
+                --drift-x: ${orb.driftX}px;
+                --drift-y: ${orb.driftY}px;
+                top: ${orb.top};
+                left: ${orb.left};
+                right: ${orb.right || "auto"};
+                bottom: ${orb.bottom || "auto"};
+              "
+            ></div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    function renderConfetti(seed) {
+      const palette = ["#0055B7", "#00C9A7", "#C4B5FF", "#93C5FD", "#FDBA74", "#FF6B6B", "#6EE7B7"];
+      return `
+        <div class="confetti-layer">
+          ${Array.from({ length: 26 }, (_, index) => {
+            const color = palette[(index + seed) % palette.length];
+            const left = `${(index * 13 + seed * 9) % 100}%`;
+            const width = `${10 + (index % 4) * 3}px`;
+            const height = `${12 + (index % 5) * 4}px`;
+            const radius = index % 3 === 0 ? "999px" : "4px";
+            const duration = `${8 + (index % 5) * 1.4}s`;
+            const delay = `${-((index * 0.55) + seed * 0.7)}s`;
+            const drift = `${(index % 2 === 0 ? 1 : -1) * (18 + (index % 6) * 10)}px`;
+            return `
+              <span
+                class="confetti-piece"
+                style="
+                  --left: ${left};
+                  --width: ${width};
+                  --height: ${height};
+                  --radius: ${radius};
+                  --color: ${color};
+                  --duration: ${duration};
+                  --delay: ${delay};
+                  --drift: ${drift};
+                "
+              ></span>
+            `;
+          }).join("")}
+        </div>
+      `;
+    }
+
+    function buildAwardSlide(award, index) {
+      const commonOrbs = [
+        { size: 380, color: "rgba(0, 201, 167, 0.52)", opacity: 0.10, duration: 33, delay: -8, driftX: 16, driftY: -14, top: "8%", left: "72%" },
+        { size: 420, color: "rgba(196, 181, 255, 0.48)", opacity: 0.08, duration: 39, delay: -15, driftX: -16, driftY: 18, top: "62%", left: "6%" }
+      ];
+
+      if (award.layout === "split") {
+        return {
+          title: award.title,
+          ambient: true,
+          notes: "",
+          theme: "light",
+          orbs: commonOrbs,
+          html: `
+            ${renderConfetti(index)}
+            <div class="award-wrap">
+              <div class="split-layout">
+                <div class="glass-card award-card celebrate-wash" style="--accent: ${award.accent};">
+                  <p class="award-icon" data-reveal>${award.icon}</p>
+                  <p class="award-kicker" data-reveal>Award Spotlight</p>
+                  <h2 class="section-title" data-reveal>${award.title}</h2>
+                  <p class="award-caption" data-reveal>${award.description}</p>
+                </div>
+                <div class="glass-card award-card" style="--accent: ${award.accent};" data-reveal>
+                  <p class="eyebrow">What This Honors</p>
+                  <p class="body-text">${award.detail}</p>
+                  <div class="badge-row">
+                    <span class="badge" style="background: ${award.accent}1A; color: ${award.accent};">Showcase Prize</span>
+                    <span class="highlight-tag">Confetti Moment</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `
+        };
+      }
+
+      if (award.layout === "center") {
+        return {
+          title: award.title,
+          ambient: true,
+          notes: "",
+          theme: "light",
+          orbs: [
+            { size: 430, color: "rgba(147, 197, 253, 0.62)", opacity: 0.12, duration: 36, delay: -5, driftX: 16, driftY: -16, top: "-8%", left: "68%" },
+            { size: 390, color: "rgba(110, 231, 183, 0.54)", opacity: 0.08, duration: 31, delay: -14, driftX: -14, driftY: 16, top: "64%", left: "10%" }
+          ],
+          html: `
+            ${renderConfetti(index)}
+            <div class="award-full-center">
+              <p class="award-icon" data-reveal>${award.icon}</p>
+              <p class="award-kicker" data-reveal>Live Showcase Prize</p>
+              <h2 class="display-title" data-reveal>${award.title}</h2>
+              <p class="lead narrow-copy" data-reveal>${award.description}</p>
+              <div class="glass-pill" data-reveal style="padding: 16px 22px;">${award.detail}</div>
+            </div>
+          `
+        };
+      }
+
+      if (award.layout === "grid") {
+        return {
+          title: award.title,
+          ambient: true,
+          notes: "",
+          theme: "light",
+          orbs: [
+            { size: 360, color: "rgba(196, 181, 255, 0.72)", opacity: 0.12, duration: 32, delay: -6, driftX: 12, driftY: -12, top: "8%", left: "8%" },
+            { size: 420, color: "rgba(251, 186, 116, 0.46)", opacity: 0.08, duration: 40, delay: -11, driftX: -18, driftY: 16, top: "60%", left: "66%" }
+          ],
+          html: `
+            ${renderConfetti(index)}
+            <div class="award-wrap">
+              <div class="award-grid">
+                <div class="glass-card award-card client-wash" style="--accent: ${award.accent}; background: rgba(196, 181, 255, 0.16);">
+                  <p class="award-icon" data-reveal>${award.icon}</p>
+                  <p class="award-kicker" data-reveal>Showcase Prize</p>
+                  <h2 class="section-title" data-reveal>${award.title}</h2>
+                </div>
+                <div class="glass-card award-card" style="--accent: ${award.accent};" data-reveal>
+                  <p class="eyebrow">Why It Matters</p>
+                  <p class="body-text">${award.description}</p>
+                  <p class="body-text">${award.detail}</p>
+                  <div class="badge-row">
+                    <span class="chip">Intentional UX</span>
+                    <span class="chip">Visual craft</span>
+                    <span class="chip">Delight in the details</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `
+        };
+      }
+
+      if (award.layout === "split-reverse") {
+        return {
+          title: award.title,
+          ambient: true,
+          notes: "",
+          theme: "dark",
+          orbs: [
+            { size: 420, color: "rgba(0, 85, 183, 0.88)", opacity: 0.20, duration: 35, delay: -9, driftX: 16, driftY: -12, top: "-10%", left: "70%" },
+            { size: 400, color: "rgba(0, 201, 167, 0.78)", opacity: 0.14, duration: 29, delay: -4, driftX: -16, driftY: 18, top: "58%", left: "8%" }
+          ],
+          html: `
+            ${renderConfetti(index)}
+            <div class="award-wrap">
+              <div class="split-layout">
+                <div class="glass-card award-card" style="--accent: ${award.accent};" data-reveal>
+                  <p class="eyebrow">Engineering Prize</p>
+                  <p class="body-text">${award.description}</p>
+                  <p class="body-text">${award.detail}</p>
+                  <div class="badge-row">
+                    <span class="badge">Architecture</span>
+                    <span class="badge">Execution</span>
+                    <span class="badge">Technical depth</span>
+                  </div>
+                </div>
+                <div class="glass-card award-card celebrate-wash" style="--accent: ${award.accent}; background: rgba(147, 197, 253, 0.14);">
+                  <p class="award-icon" data-reveal>${award.icon}</p>
+                  <p class="award-kicker" data-reveal>Live Showcase Prize</p>
+                  <h2 class="section-title" data-reveal>${award.title}</h2>
+                </div>
+              </div>
+            </div>
+          `
+        };
+      }
+
+      return {
+        title: award.title,
+        ambient: true,
+        notes: "",
+        theme: "light",
+        orbs: [
+          { size: 430, color: "rgba(251, 186, 116, 0.56)", opacity: 0.10, duration: 34, delay: -8, driftX: 18, driftY: -14, top: "-10%", left: "68%" },
+          { size: 350, color: "rgba(110, 231, 183, 0.50)", opacity: 0.08, duration: 39, delay: -15, driftX: -14, driftY: 16, top: "64%", left: "8%" }
+        ],
+        html: `
+          ${renderConfetti(index)}
+          <div class="award-stack">
+            <div class="glass-card award-card celebrate-wash" style="--accent: ${award.accent};">
+              <p class="award-icon" data-reveal>${award.icon}</p>
+              <p class="award-kicker" data-reveal>Showcase Prize</p>
+              <h2 class="section-title" data-reveal>${award.title}</h2>
+              <p class="award-caption" data-reveal>${award.description}</p>
+            </div>
+            <div class="glass-card pill-list-item" data-reveal>
+              <div class="emoji">📈</div>
+              <div class="time">Impact</div>
+              <div class="title">${award.detail}</div>
+              <div class="tail">Real-world signal</div>
+            </div>
+            <div class="glass-card pill-list-item" data-reveal>
+              <div class="emoji">🌍</div>
+              <div class="time">Why It Lands</div>
+              <div class="title">This is the prize for work that feels like it could matter beyond tonight.</div>
+              <div class="tail">People first</div>
+            </div>
+          </div>
+        `
+      };
+    }
+
+    function buildSlides() {
+      const slides = [
+        {
+          title: "Cinematic Opener",
+          ambient: false,
+          notes: "Welcome everyone. Thanks for being here tonight. My name is Fahim, I'm the TA coordinator for CPSC 319 this semester. Before we get started - look around this room. 69 students. 14 teams. 5 real clients. One semester. What you're about to see tonight is the result of all of that. Let's get into it.",
+          theme: "dark",
+          scene: "ship-it-scene",
+          orbs: [
+            { size: 520, color: "rgba(0, 85, 183, 0.92)", opacity: 0.24, duration: 32, delay: -8, driftX: 18, driftY: 16, top: "-12%", left: "-4%" },
+            { size: 440, color: "rgba(196, 181, 255, 0.88)", opacity: 0.18, duration: 39, delay: -17, driftX: -12, driftY: -18, top: "62%", left: "74%" }
+          ],
+          html: `
+            <div class="opener-shell">
+              <div class="intro-lockup">
+                <p class="opener-kicker">Launch Sequence</p>
+                <p class="opener-ghost">SHIP IT</p>
+                <h1 class="display-title">CPSC 319</h1>
+                <p class="lead mono teal-text opener-subline">Software Engineering Project Showcase</p>
+                <div class="glass-pill opener-pill mono">April 8, 2026 &middot; CS Atrium &middot; UBC</div>
+              </div>
+            </div>
+          `
+        },
+        {
+          title: "The Number",
+          ambient: true,
+          notes: "69 students. That's not a class - that's a small startup. Every person in this room who's on a team tonight wrote real code, for real users, solving real problems. That's what CPSC 319 is about.",
+          theme: "light",
+          orbs: [
+            { size: 380, color: "rgba(147, 197, 253, 0.72)", opacity: 0.14, duration: 33, delay: -5, driftX: -14, driftY: 18, top: "6%", left: "74%" },
+            { size: 430, color: "rgba(110, 231, 183, 0.64)", opacity: 0.12, duration: 40, delay: -13, driftX: 18, driftY: -14, top: "58%", left: "-4%" }
+          ],
+          html: `
+            <div class="full-center">
+              <p class="eyebrow" data-reveal>Software shipped this semester</p>
+              <p class="stat-value mono" data-count="69" data-duration="800" data-reveal>69</p>
+              <h2 class="stat-caption" data-reveal>students shipped real software this semester.</h2>
+              <p class="lead narrow-copy" data-reveal>For 5 organizations. Across 14 teams. In one course.</p>
+            </div>
+          `
+        },
+        {
+          title: "What Is CPSC 319?",
+          ambient: true,
+          notes: "For anyone who's not familiar with the course - quick context. CPSC 319 pairs student teams with real organizations who have real software needs. The students scope, design, build, test, and deliver working software over the semester. What you'll see tonight isn't homework - it's production work.",
+          theme: "light",
+          orbs: [
+            { size: 360, color: "rgba(196, 181, 255, 0.62)", opacity: 0.10, duration: 34, delay: -9, driftX: 16, driftY: -16, top: "4%", left: "72%" },
+            { size: 420, color: "rgba(147, 197, 253, 0.50)", opacity: 0.08, duration: 38, delay: -2, driftX: -16, driftY: 18, top: "66%", left: "-2%" }
+          ],
+          html: `
+            <div class="split-layout">
+              <div class="title-stack">
+                <p class="eyebrow" data-reveal>Course Context</p>
+                <h2 class="section-title" data-reveal>Software Engineering Project</h2>
+                <p class="body-text" data-reveal>CPSC 319 is UBC's capstone software engineering course. Students form teams and spend an entire semester building production software for real external clients.</p>
+                <p class="body-text" data-reveal>This isn't a simulation. The clients are real. The deadlines are real. The users are real.</p>
+                <p class="body-text" data-reveal>Tonight, every team presents what they shipped.</p>
+              </div>
+              <div class="panel-stack">
+                <div class="glass-card stat-stack-pill" data-reveal><span>14 Teams</span><span>01</span></div>
+                <div class="glass-card stat-stack-pill" data-reveal><span>5 Clients</span><span>02</span></div>
+                <div class="glass-card stat-stack-pill" data-reveal><span>1 Semester</span><span>03</span></div>
+                <div class="glass-card stat-stack-pill" data-reveal><span>4 Months of Development</span><span>04</span></div>
+                <div class="glass-card stat-stack-pill" data-reveal><span>1 Showcase</span><span>05</span></div>
+              </div>
+            </div>
+          `
+        },
+        {
+          title: "The People Who Made This Happen",
+          ambient: false,
+          notes: "Quick shoutout to the team. Parsa designed and runs this course. I coordinated the TA team and the logistics behind tonight's event. And our TAs - Liz, Mohsen, Stash, and Mahdi - were in the trenches with your teams every single week. But the real stars tonight are the students. Let's meet who they built for.",
+          theme: "light",
+          orbs: [
+            { size: 400, color: "rgba(147, 197, 253, 0.58)", opacity: 0.10, duration: 31, delay: -11, driftX: 18, driftY: -12, top: "-8%", left: "8%" },
+            { size: 460, color: "rgba(110, 231, 183, 0.56)", opacity: 0.10, duration: 38, delay: -3, driftX: -16, driftY: 18, top: "58%", left: "70%" }
+          ],
+          html: `
+            <div class="stacked-layout" style="max-width: none;">
+              <div class="title-stack" style="text-align: center; align-items: center;">
+                <p class="eyebrow" data-reveal>Teaching Team</p>
+                <h2 class="section-title" data-reveal>The People Who Made This Happen</h2>
+              </div>
+              <div class="grid-three">
+                <div class="glass-card profile-card card-pad" data-reveal>
+                  <p class="eyebrow">Instructor</p>
+                  <h3 class="nameplate">Parsa</h3>
+                  <span class="role-pill badge">Instructor &middot; CPSC 319</span>
+                  <p class="body-text">Course design, client relationships, and the vision behind the showcase.</p>
+                </div>
+                <div class="glass-card profile-card card-pad" data-reveal>
+                  <p class="eyebrow">TA Coordinator</p>
+                  <h3 class="nameplate">Fahim</h3>
+                  <span class="role-pill badge">TA Coordinator</span>
+                  <p class="body-text">Course logistics, rubrics, TA ops, and the event coordination behind tonight's showcase.</p>
+                </div>
+                <div class="glass-card profile-card card-pad" data-reveal>
+                  <p class="eyebrow">Teaching Assistants</p>
+                  <h3 class="nameplate">Liz &middot; Mohsen &middot; Stash &middot; Mahdi</h3>
+                  <span class="role-pill badge">Teaching Assistants</span>
+                  <p class="body-text">Weekly mentorship, code reviews, grading, and keeping 14 teams on track.</p>
+                </div>
+              </div>
+              <p class="subtle-note" data-reveal style="text-align: center;">And 69 students who showed up every week and built something real.</p>
+            </div>
+          `
+        },
+        {
+          title: "Built For",
+          ambient: true,
+          notes: "These are the five organizations that trusted our students with real problems. Benevity, Surrey Food Bank, and Aunt Leah's are community and social impact organizations. FeathersJS and Open WebUI are open-source projects used by developers worldwide. Three teams worked on each of the first four, and two teams worked on Open WebUI. 14 teams total. Let's see what they built.",
+          theme: "light",
+          orbs: [
+            { size: 430, color: "rgba(251, 186, 116, 0.56)", opacity: 0.08, duration: 36, delay: -12, driftX: 16, driftY: -16, top: "-6%", left: "68%" },
+            { size: 370, color: "rgba(196, 181, 255, 0.56)", opacity: 0.08, duration: 29, delay: -5, driftX: -18, driftY: 14, top: "66%", left: "2%" }
+          ],
+          html: `
+            <div class="horizontal-flow">
+              <div class="title-stack" style="align-items: center; text-align: center;">
+                <p class="eyebrow" data-reveal>Client Partners</p>
+                <h2 class="section-title" data-reveal>Built For</h2>
+              </div>
+              <div class="flow-row">
+                <div class="flow-card" style="--accent: #0055B7;" data-reveal>
+                  <h3 class="mini-title">Benevity</h3>
+                  <span class="metric-pill">3 Teams</span>
+                  <p class="mini-copy">Corporate giving and volunteering platform</p>
+                </div>
+                <div class="flow-card" style="--accent: #00C9A7;" data-reveal>
+                  <h3 class="mini-title">Surrey Food Bank</h3>
+                  <span class="metric-pill">3 Teams</span>
+                  <p class="mini-copy">Community food security and distribution</p>
+                </div>
+                <div class="flow-card" style="--accent: #FDBA74;" data-reveal>
+                  <h3 class="mini-title">Aunt Leah's</h3>
+                  <span class="metric-pill">3 Teams</span>
+                  <p class="mini-copy">Housing and life skills for youth aging out of foster care</p>
+                </div>
+                <div class="flow-card" style="--accent: #C4B5FF;" data-reveal>
+                  <h3 class="mini-title">FeathersJS</h3>
+                  <span class="metric-pill">3 Teams</span>
+                  <p class="mini-copy">Open-source real-time API framework</p>
+                </div>
+                <div class="flow-card" style="--accent: #93C5FD;" data-reveal>
+                  <h3 class="mini-title">Open WebUI</h3>
+                  <span class="metric-pill">2 Teams</span>
+                  <p class="mini-copy">Self-hosted AI interface platform</p>
+                </div>
+              </div>
+            </div>
+          `
+        },
+        {
+          title: "Here's How Tonight Works",
+          ambient: false,
+          notes: "Simple format tonight. We'll wrap up these opening remarks in a minute, then the floor is yours. Walk around, visit all 14 stations, see live demos, and talk to the teams until 6:45. After that, please take a moment to fill out the showcase surveys - students will get the link on Slack, and clients can scan the QR code. There's food - help yourself. We'll reconvene at 7:15 for a quick close. Sound good? Let's go.",
+          theme: "light",
+          orbs: [
+            { size: 410, color: "rgba(110, 231, 183, 0.58)", opacity: 0.10, duration: 30, delay: -9, driftX: 16, driftY: 16, top: "-8%", left: "74%" },
+            { size: 360, color: "rgba(147, 197, 253, 0.48)", opacity: 0.08, duration: 38, delay: -4, driftX: -12, driftY: -18, top: "72%", left: "4%" }
+          ],
+          html: `
+            <div class="stacked-layout">
+              <div class="title-stack" style="align-items: center; text-align: center;">
+                <p class="eyebrow" data-reveal>Showcase Flow</p>
+                <h2 class="section-title" data-reveal>Here's How Tonight Works</h2>
+              </div>
+              <div class="glass-card pill-list-item" data-reveal>
+                <div class="emoji">🎤</div>
+                <div class="time">5:30 PM</div>
+                <div class="title">Welcome &amp; Opening Remarks</div>
+                <div class="tail"><span class="highlight-tag">(you are here)</span></div>
+              </div>
+              <div class="glass-card pill-list-item" data-reveal>
+                <div class="emoji">🚶</div>
+                <div class="time">5:45 PM</div>
+                <div class="title">Open Floor - Visit All 14 Project Stations</div>
+                <div class="tail">Walk the room</div>
+              </div>
+              <div class="glass-card pill-list-item" data-reveal>
+                <div class="emoji">💬</div>
+                <div class="time">5:45-6:45 PM</div>
+                <div class="title">Talk to Teams &middot; See Live Demos &middot; Ask Questions</div>
+                <div class="tail">Stay curious</div>
+              </div>
+              <div class="glass-card pill-list-item" data-reveal>
+                <div class="emoji">📝</div>
+                <div class="time">6:45 PM</div>
+                <div class="title">Fill Out Showcase Surveys</div>
+                <div class="tail">Students on Slack &middot; Clients via QR</div>
+              </div>
+              <div class="glass-card pill-list-item" data-reveal>
+                <div class="emoji">🍕</div>
+                <div class="time">Anytime</div>
+                <div class="title">Refreshments Available</div>
+                <div class="tail">Please help yourself</div>
+              </div>
+              <div class="glass-card pill-list-item" data-reveal>
+                <div class="emoji">🎉</div>
+                <div class="time">7:15 PM</div>
+                <div class="title">Closing Remarks &amp; Celebration</div>
+                <div class="tail">See you back here</div>
+              </div>
+              <p class="lead" data-reveal style="text-align: center;">Walk the floor. See every team. Ask hard questions. They're ready.</p>
+            </div>
+          `
+        },
+        {
+          title: "Go",
+          ambient: false,
+          notes: "",
+          theme: "dark",
+          orbs: [
+            { size: 430, color: "rgba(0, 85, 183, 0.88)", opacity: 0.22, duration: 30, delay: -4, driftX: 12, driftY: 14, top: "8%", left: "14%" },
+            { size: 500, color: "rgba(196, 181, 255, 0.86)", opacity: 0.18, duration: 39, delay: -15, driftX: -18, driftY: -12, top: "48%", left: "68%" }
+          ],
+          html: `
+            <div class="full-center dark-punch">
+              <h2 class="display-title" data-reveal>Go.</h2>
+              <p class="lead mono teal-text" data-reveal>The floor is yours.</p>
+            </div>
+          `
+        },
+        {
+          title: "Ambient Title Card",
+          ambient: true,
+          notes: "",
+          theme: "dark",
+          scene: "ambient-orbit-scene",
+          orbs: [
+            { size: 460, color: "rgba(0, 85, 183, 0.88)", opacity: 0.18, duration: 40, delay: -13, driftX: 16, driftY: -12, top: "-12%", left: "66%" },
+            { size: 380, color: "rgba(0, 201, 167, 0.80)", opacity: 0.14, duration: 28, delay: -5, driftX: -14, driftY: 16, top: "62%", left: "6%" }
+          ],
+          html: `
+            <div class="ambient-home">
+              <div class="ambient-home-copy">
+                <div class="glass-card ambient-home-card">
+                  <p class="eyebrow" data-reveal>CPSC 319</p>
+                  <h2 class="section-title" data-reveal>Project Showcase</h2>
+                  <p class="lead mono teal-text" data-reveal>April 8, 2026</p>
+                </div>
+              </div>
+              <div></div>
+            </div>
+          `
+        }
+      ];
+
+      awards.forEach((award, index) => {
+        slides.push(buildAwardSlide(award, index));
+      });
+
+      slides.push(
+        {
+          title: "The Number Again",
+          ambient: false,
+          notes: "Alright everyone, if I could have your attention for just a few minutes. You just saw 14 projects. Real software, built by students in this room, for organizations that are going to use it. That's not normal for a university course. That's special.",
+          theme: "light",
+          orbs: [
+            { size: 420, color: "rgba(0, 201, 167, 0.64)", opacity: 0.12, duration: 33, delay: -7, driftX: 16, driftY: -14, top: "8%", left: "72%" },
+            { size: 360, color: "rgba(196, 181, 255, 0.48)", opacity: 0.08, duration: 39, delay: -15, driftX: -18, driftY: 16, top: "62%", left: "8%" }
+          ],
+          html: `
+            <div class="full-center">
+              <p class="eyebrow" data-reveal>Closing Moment</p>
+              <p class="stat-value mono teal" data-count="14" data-duration="600" data-reveal>14</p>
+              <h2 class="stat-caption" data-reveal>projects. Shipped. Tonight.</h2>
+              <p class="lead narrow-copy" data-reveal>Built by students. For real clients. With real users waiting.</p>
+            </div>
+          `
+        },
+        {
+          title: "Thank You",
+          ambient: false,
+          notes: "Genuine thank you to everyone. Students - you shipped. That's not easy. Clients - you gave us real problems and trusted a room full of students to solve them. Teaching team - you held this together. And guests - your presence here tonight means a lot. The students remember who showed up.",
+          theme: "light",
+          orbs: [
+            { size: 410, color: "rgba(147, 197, 253, 0.54)", opacity: 0.10, duration: 35, delay: -9, driftX: 18, driftY: -16, top: "-8%", left: "10%" },
+            { size: 360, color: "rgba(110, 231, 183, 0.50)", opacity: 0.08, duration: 30, delay: -3, driftX: -16, driftY: 14, top: "66%", left: "72%" }
+          ],
+          html: `
+            <div class="stacked-layout" style="max-width: none;">
+              <div class="title-stack" style="align-items: center; text-align: center;">
+                <p class="eyebrow" data-reveal>Gratitude</p>
+                <h2 class="section-title" data-reveal>Thank You</h2>
+              </div>
+              <div class="grid-two-by-two">
+                <div class="glass-card thank-you-card card-pad celebrate-wash" data-reveal>
+                  <p class="eyebrow">🎓 Students</p>
+                  <p class="body-text">69 of you showed up, stayed the course, and shipped. That's the hardest part.</p>
+                </div>
+                <div class="glass-card thank-you-card card-pad client-wash" data-reveal>
+                  <p class="eyebrow">🏢 Clients</p>
+                  <p class="body-text">Benevity, Surrey Food Bank, Aunt Leah's, FeathersJS, and Open WebUI - for trusting students with real problems.</p>
+                </div>
+                <div class="glass-card thank-you-card card-pad" data-reveal>
+                  <p class="eyebrow">🧑‍🏫 Teaching Team</p>
+                  <p class="body-text">Parsa, Fahim, Liz, Mohsen, Stash, and Mahdi - for making this course work behind the scenes.</p>
+                </div>
+                <div class="glass-card thank-you-card card-pad celebrate-wash" data-reveal>
+                  <p class="eyebrow">🌐 Guests</p>
+                  <p class="body-text">Industry professionals, faculty, and community members - for being here and engaging with our students' work.</p>
+                </div>
+              </div>
+            </div>
+          `
+        },
+        {
+          title: "What Happens Next",
+          ambient: false,
+          notes: "Quick logistics. Teams are doing formal handovers with their clients over the next couple weeks - code, docs, deployment guides, everything. Before you head out, please fill out the showcase surveys. Students, watch Slack for the link. Clients, scan the QR code before you leave. If you're interested in being a client for a future offering, talk to me or Parsa. We'll send a recap email with photos to everyone who RSVPed. And if you talked to a team tonight and want to follow up - do it. They'd love to hear from you.",
+          theme: "light",
+          orbs: [
+            { size: 420, color: "rgba(251, 186, 116, 0.56)", opacity: 0.10, duration: 32, delay: -6, driftX: 16, driftY: -14, top: "-10%", left: "70%" },
+            { size: 380, color: "rgba(147, 197, 253, 0.48)", opacity: 0.08, duration: 38, delay: -16, driftX: -16, driftY: 18, top: "62%", left: "10%" }
+          ],
+          html: `
+            <div class="stacked-layout">
+              <div class="title-stack" style="align-items: center; text-align: center;">
+                <p class="eyebrow" data-reveal>After Tonight</p>
+                <h2 class="section-title" data-reveal>What Happens Next</h2>
+              </div>
+              <div class="glass-card pill-list-item" data-reveal>
+                <div class="emoji">📦</div>
+                <div class="time">Handover</div>
+                <div class="title">Teams deliver final code, documentation, and handover packages to clients over the next two weeks.</div>
+                <div class="tail">Shipping continues</div>
+              </div>
+              <div class="glass-card pill-list-item" data-reveal>
+                <div class="emoji">🔁</div>
+                <div class="time">CPSC 319 Returns</div>
+                <div class="title">This course runs again next year. If you're a potential client or student - talk to us.</div>
+                <div class="tail">Let's build again</div>
+              </div>
+              <div class="glass-card pill-list-item" data-reveal>
+                <div class="emoji">📸</div>
+                <div class="time">Photos &amp; Recap</div>
+                <div class="title">We'll share a recap and photo gallery with all attendees via email.</div>
+                <div class="tail">Keepsake included</div>
+              </div>
+              <div class="glass-card pill-list-item" data-reveal>
+                <div class="emoji">📝</div>
+                <div class="time">Surveys</div>
+                <div class="title">Students: watch Slack for the showcase survey. Clients: scan the QR code before you head out.</div>
+                <div class="tail">Please fill it out</div>
+              </div>
+              <div class="glass-card pill-list-item" data-reveal>
+                <div class="emoji">💬</div>
+                <div class="time">Stay Connected</div>
+                <div class="title">Reach out to any team tonight - they'd love to hear from you.</div>
+                <div class="tail">Keep the conversation going</div>
+              </div>
+            </div>
+          `
+        },
+        {
+          title: "Ship It",
+          ambient: false,
+          notes: "That's a wrap. Thank you all. Enjoy the rest of your evening - and congratulations to every team. You shipped. That's the whole game.",
+          theme: "dark",
+          orbs: [
+            { size: 470, color: "rgba(0, 85, 183, 0.92)", opacity: 0.22, duration: 31, delay: -8, driftX: 18, driftY: -12, top: "-12%", left: "8%" },
+            { size: 420, color: "rgba(0, 201, 167, 0.88)", opacity: 0.18, duration: 39, delay: -14, driftX: -16, driftY: 16, top: "62%", left: "70%" }
+          ],
+          html: `
+            <div class="full-center dark-punch">
+              <h2 class="display-title" data-reveal>Ship it.</h2>
+              <p class="lead mono teal-text" data-reveal>CPSC 319 &middot; April 2026</p>
+              <div class="glass-pill opener-pill" data-reveal style="animation: none; opacity: 1; transform: none;">Thank you for being here.</div>
+            </div>
+          `
+        }
+      );
+
+      return slides;
+    }
+
+    const slides = buildSlides();
+    const stage = document.getElementById("stage");
+    const mapGrid = document.getElementById("mapGrid");
+    const counterText = document.getElementById("counterText");
+    const counterProgressBar = document.getElementById("counterProgressBar");
+    const slideMapOverlay = document.getElementById("slideMapOverlay");
+    const shortcutModal = document.getElementById("shortcutModal");
+    const notesDrawer = document.getElementById("notesDrawer");
+    const notesTitle = document.getElementById("notesTitle");
+    const notesBody = document.getElementById("notesBody");
+
+    let currentIndex = 0;
+    let ambientMode = false;
+    let ambientInterval = null;
+    let slideElements = [];
+    let touchStartX = 0;
+
+    function renderSlides() {
+      stage.innerHTML = slides.map((slide, index) => `
+        <section class="slide ${slide.theme === "dark" ? "theme-dark" : ""}" data-index="${index}">
+          ${renderOrbs(slide.orbs)}
+          ${slide.scene ? `<div class="scene-slot ${slide.scene}"></div>` : ""}
+          <div class="slide-shell">${slide.html}</div>
+        </section>
+      `).join("");
+
+      slideElements = Array.from(stage.querySelectorAll(".slide"));
+      slideElements[0].classList.add("is-active");
+      buildMap();
+      updateChrome();
+      updateNotes();
+      animateSlideContent(slideElements[0]);
+      animateCounts(slideElements[0]);
+    }
+
+    function buildMap() {
+      mapGrid.innerHTML = slides.map((slide, index) => `
+        <button class="map-card ${index === currentIndex ? "active" : ""}" data-map-index="${index}">
+          <div class="map-number">Slide ${index + 1}</div>
+          <h3>${slide.title}</h3>
+          <span class="map-tag">${slide.ambient ? "Ambient" : "Ceremony"}</span>
+        </button>
+      `).join("");
+    }
+
+    function updateMapState() {
+      mapGrid.querySelectorAll(".map-card").forEach((card) => {
+        card.classList.toggle("active", Number(card.dataset.mapIndex) === currentIndex);
+      });
+    }
+
+    function updateChrome() {
+      counterText.textContent = `${currentIndex + 1} / ${slides.length}`;
+      counterProgressBar.style.width = `${((currentIndex + 1) / slides.length) * 100}%`;
+      updateMapState();
+    }
+
+    function updateNotes() {
+      const slide = slides[currentIndex];
+      notesTitle.textContent = `Slide ${currentIndex + 1} - ${slide.title}`;
+      if (slide.notes && slide.notes.trim()) {
+        notesBody.textContent = slide.notes;
+        notesBody.classList.remove("empty");
+      } else {
+        notesBody.textContent = "No speaker notes for this slide.";
+        notesBody.classList.add("empty");
+      }
+    }
+
+    function animateSlideContent(slideEl) {
+      const revealables = slideEl.querySelectorAll("[data-reveal]");
+      revealables.forEach((node, index) => {
+        node.classList.remove("reveal-in");
+        node.style.animationDelay = `${index * 70}ms`;
+        void node.offsetWidth;
+        node.classList.add("reveal-in");
+      });
+    }
+
+    function animateCounts(slideEl) {
+      slideEl.querySelectorAll("[data-count]").forEach((node) => {
+        const target = Number(node.dataset.count);
+        const duration = Number(node.dataset.duration || 800);
+        const start = performance.now();
+
+        function tick(now) {
+          const progress = Math.min((now - start) / duration, 1);
+          const eased = 1 - Math.pow(1 - progress, 3);
+          node.textContent = String(Math.round(target * eased));
+          if (progress < 1) {
+            requestAnimationFrame(tick);
+          } else {
+            node.textContent = String(target);
+          }
+        }
+
+        requestAnimationFrame(tick);
+      });
+    }
+
+    function goToSlide(index) {
+      const targetIndex = Math.max(0, Math.min(slides.length - 1, index));
+      if (targetIndex === currentIndex) return;
+
+      const previousIndex = currentIndex;
+      const previous = slideElements[previousIndex];
+      const next = slideElements[targetIndex];
+
+      slideElements.forEach((slideEl, idx) => {
+        if (idx !== previousIndex && idx !== targetIndex) {
+          slideEl.classList.remove("is-exiting");
+        }
+      });
+
+      previous.classList.remove("is-active");
+      previous.classList.add("is-exiting");
+      next.classList.add("is-active");
+      next.classList.remove("is-exiting");
+
+      currentIndex = targetIndex;
+      updateChrome();
+      updateNotes();
+      animateSlideContent(next);
+      animateCounts(next);
+
+      window.setTimeout(() => {
+        previous.classList.remove("is-exiting");
+      }, 520);
+    }
+
+    function nextSlide() {
+      goToSlide(Math.min(currentIndex + 1, slides.length - 1));
+    }
+
+    function previousSlide() {
+      goToSlide(Math.max(currentIndex - 1, 0));
+    }
+
+    const ambientIndices = slides
+      .map((slide, index) => slide.ambient ? index : -1)
+      .filter((index) => index >= 0);
+
+    function getNextAmbientIndex(fromIndex) {
+      const next = ambientIndices.find((index) => index > fromIndex);
+      return next !== undefined ? next : ambientIndices[0];
+    }
+
+    function advanceAmbient() {
+      goToSlide(getNextAmbientIndex(currentIndex));
+    }
+
+    function startAmbientMode() {
+      if (ambientMode) return;
+      ambientMode = true;
+      document.body.classList.add("ambient-active");
+      if (!slides[currentIndex].ambient) {
+        goToSlide(getNextAmbientIndex(currentIndex));
+      }
+      ambientInterval = window.setInterval(advanceAmbient, 8000);
+    }
+
+    function stopAmbientMode() {
+      if (!ambientMode) return;
+      ambientMode = false;
+      document.body.classList.remove("ambient-active");
+      window.clearInterval(ambientInterval);
+      ambientInterval = null;
+    }
+
+    function toggleAmbientMode() {
+      if (ambientMode) {
+        stopAmbientMode();
+      } else {
+        closeMap();
+        closeHelp();
+        startAmbientMode();
+      }
+    }
+
+    function openMap() {
+      slideMapOverlay.classList.add("open");
+      slideMapOverlay.setAttribute("aria-hidden", "false");
+    }
+
+    function closeMap() {
+      slideMapOverlay.classList.remove("open");
+      slideMapOverlay.setAttribute("aria-hidden", "true");
+    }
+
+    function openHelp() {
+      shortcutModal.classList.add("open");
+      shortcutModal.setAttribute("aria-hidden", "false");
+    }
+
+    function closeHelp() {
+      shortcutModal.classList.remove("open");
+      shortcutModal.setAttribute("aria-hidden", "true");
+    }
+
+    function openNotes() {
+      notesDrawer.classList.add("open");
+      notesDrawer.setAttribute("aria-hidden", "false");
+    }
+
+    function closeNotes() {
+      notesDrawer.classList.remove("open");
+      notesDrawer.setAttribute("aria-hidden", "true");
+    }
+
+    function toggleNotes() {
+      if (notesDrawer.classList.contains("open")) {
+        closeNotes();
+      } else {
+        openNotes();
+      }
+    }
+
+    function overlaysOpen() {
+      return slideMapOverlay.classList.contains("open") || shortcutModal.classList.contains("open");
+    }
+
+    document.getElementById("counterButton").addEventListener("click", openMap);
+    document.getElementById("closeMapButton").addEventListener("click", closeMap);
+    document.getElementById("helpButton").addEventListener("click", openHelp);
+    document.getElementById("closeHelpButton").addEventListener("click", closeHelp);
+    document.getElementById("notesButton").addEventListener("click", toggleNotes);
+    document.getElementById("closeNotesButton").addEventListener("click", closeNotes);
+
+    mapGrid.addEventListener("click", (event) => {
+      const card = event.target.closest(".map-card");
+      if (!card) return;
+      stopAmbientMode();
+      goToSlide(Number(card.dataset.mapIndex));
+      closeMap();
+    });
+
+    slideMapOverlay.addEventListener("click", (event) => {
+      if (event.target === slideMapOverlay) closeMap();
+    });
+
+    shortcutModal.addEventListener("click", (event) => {
+      if (event.target === shortcutModal) closeHelp();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        if (slideMapOverlay.classList.contains("open")) closeMap();
+        else if (shortcutModal.classList.contains("open")) closeHelp();
+        else if (notesDrawer.classList.contains("open")) closeNotes();
+        return;
+      }
+
+      if (overlaysOpen()) return;
+
+      if (event.key === "ArrowRight") {
+        stopAmbientMode();
+        nextSlide();
+      } else if (event.key === "ArrowLeft") {
+        stopAmbientMode();
+        previousSlide();
+      } else if (event.key.toLowerCase() === "a") {
+        toggleAmbientMode();
+      } else if (event.key.toLowerCase() === "n") {
+        toggleNotes();
+      } else if (event.key === "?" || (event.key === "/" && event.shiftKey)) {
+        openHelp();
+      }
+    });
+
+    document.addEventListener("click", (event) => {
+      if (overlaysOpen()) return;
+      if (event.target.closest(".chrome-pill") || event.target.closest(".notes-panel")) return;
+
+      stopAmbientMode();
+      const x = event.clientX;
+      if (x < window.innerWidth / 2) {
+        previousSlide();
+      } else {
+        nextSlide();
+      }
+    });
+
+    document.addEventListener("touchstart", (event) => {
+      if (!event.touches.length) return;
+      touchStartX = event.touches[0].clientX;
+    }, { passive: true });
+
+    document.addEventListener("touchend", (event) => {
+      if (overlaysOpen() || !event.changedTouches.length) return;
+      const deltaX = event.changedTouches[0].clientX - touchStartX;
+      if (Math.abs(deltaX) < 50) return;
+      stopAmbientMode();
+      if (deltaX < 0) nextSlide();
+      if (deltaX > 0) previousSlide();
+    }, { passive: true });
+
+    function initShipItScene() {
+      const container = document.querySelector(".ship-it-scene");
+      if (!container || typeof THREE === "undefined") return;
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setClearColor(0x000000, 0);
+      container.appendChild(renderer.domElement);
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
+      camera.position.set(0, 0.15, 12.8);
+
+      const heroGroup = new THREE.Group();
+      scene.add(heroGroup);
+
+      const starCount = 420;
+      const starPositions = new Float32Array(starCount * 3);
+      for (let i = 0; i < starCount; i += 1) {
+        starPositions[i * 3] = (Math.random() - 0.5) * 30;
+        starPositions[i * 3 + 1] = (Math.random() - 0.5) * 18;
+        starPositions[i * 3 + 2] = -8 + Math.random() * 6;
+      }
+
+      const starGeometry = new THREE.BufferGeometry();
+      starGeometry.setAttribute("position", new THREE.BufferAttribute(starPositions, 3));
+      const stars = new THREE.Points(
+        starGeometry,
+        new THREE.PointsMaterial({
+          color: 0x93C5FD,
+          size: 0.08,
+          transparent: true,
+          opacity: 0.54,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false
+        })
+      );
+      scene.add(stars);
+
+      const haloGroup = new THREE.Group();
+      heroGroup.add(haloGroup);
+      const rings = [];
+      [3.2, 4.9, 6.4].forEach((radius, index) => {
+        const ringPoints = [];
+        for (let i = 0; i < 180; i += 1) {
+          const angle = (i / 180) * Math.PI * 2;
+          ringPoints.push(new THREE.Vector3(Math.cos(angle) * radius, Math.sin(angle) * radius, 0));
+        }
+        const ring = new THREE.LineLoop(
+          new THREE.BufferGeometry().setFromPoints(ringPoints),
+          new THREE.LineBasicMaterial({
+            color: index % 2 === 0 ? 0x0055B7 : 0x00C9A7,
+            transparent: true,
+            opacity: 0.14 - index * 0.02,
+            depthWrite: false
+          })
+        );
+        ring.rotation.x = index === 0 ? Math.PI * 0.66 : index === 1 ? Math.PI * 0.47 : Math.PI * 0.58;
+        ring.rotation.y = index === 0 ? 0.32 : index === 1 ? -0.52 : 0.18;
+        ring.position.z = -0.2 - index * 0.25;
+        ring.userData = {
+          baseOpacity: 0.14 - index * 0.02,
+          spin: (index % 2 === 0 ? 1 : -1) * (0.0011 + index * 0.0005),
+          pulse: index * 1.3
+        };
+        haloGroup.add(ring);
+        rings.push(ring);
+      });
+
+      const streakGroup = new THREE.Group();
+      heroGroup.add(streakGroup);
+      const streaks = [];
+      for (let i = 0; i < 12; i += 1) {
+        const angle = (i / 12) * Math.PI * 2;
+        const inner = 4.2 + Math.random() * 0.35;
+        const outer = 6.2 + Math.random() * 0.9;
+        const line = new THREE.Line(
+          new THREE.BufferGeometry().setFromPoints([
+            new THREE.Vector3(Math.cos(angle) * inner, Math.sin(angle) * inner, -0.5),
+            new THREE.Vector3(Math.cos(angle) * outer, Math.sin(angle) * outer, -0.5)
+          ]),
+          new THREE.LineBasicMaterial({
+            color: i % 2 === 0 ? 0x00C9A7 : 0x93C5FD,
+            transparent: true,
+            opacity: 0.06 + (i % 3) * 0.012,
+            depthWrite: false
+          })
+        );
+        line.userData = {
+          baseOpacity: 0.06 + (i % 3) * 0.012,
+          spin: (i % 2 === 0 ? 1 : -1) * (0.002 + i * 0.00012)
+        };
+        streakGroup.add(line);
+        streaks.push(line);
+      }
+
+      const shipPattern = [
+        " ####   #  #  ###   ####     ###  ##### ",
+        "#      #  #   #    #   #     #     #   ",
+        "#      #  #   #    #   #     #     #   ",
+        " ###   ####   #    ####      #     #   ",
+        "    #  #  #   #    #         #     #   ",
+        "    #  #  #   #    #         #     #   ",
+        "####   #  #  ###   #        ###    #   "
+      ];
+
+      const points = [];
+      const stepX = 0.31;
+      const stepY = 0.40;
+      shipPattern.forEach((row, y) => {
+        row.split("").forEach((cell, x) => {
+          if (cell === "#") {
+            const density = 2 + ((x + y) % 2);
+            for (let i = 0; i < density; i += 1) {
+              points.push({
+                baseX: (x - row.length / 2) * stepX + (Math.random() - 0.5) * 0.1,
+                baseY: (shipPattern.length / 2 - y) * stepY + (Math.random() - 0.5) * 0.1,
+                drift: Math.random() * Math.PI * 2,
+                velocityX: 0,
+                velocityY: 0,
+                velocityZ: 0,
+                introX: 0,
+                introY: 0,
+                introZ: 0,
+                activeX: 0,
+                activeY: 0,
+                activeZ: 0
+              });
+            }
+          }
+        });
+      });
+
+      while (points.length > 320) points.pop();
+      while (points.length < 320) {
+        const clone = points[points.length % (points.length || 1)];
+        const angle = Math.random() * Math.PI * 2;
+        const radius = 7 + Math.random() * 7;
+        points.push({
+          baseX: clone.baseX + (Math.random() - 0.5) * 0.12,
+          baseY: clone.baseY + (Math.random() - 0.5) * 0.12,
+          drift: Math.random() * Math.PI * 2,
+          velocityX: 0,
+          velocityY: 0,
+          velocityZ: 0,
+          introX: Math.cos(angle) * radius,
+          introY: Math.sin(angle) * radius * 0.78 + (Math.random() - 0.5) * 3,
+          introZ: (Math.random() - 0.5) * 8,
+          activeX: 0,
+          activeY: 0,
+          activeZ: 0
+        });
+      }
+
+      points.forEach((point) => {
+        if (!point.introX && !point.introY && !point.introZ) {
+          const angle = Math.random() * Math.PI * 2;
+          const radius = 7 + Math.random() * 8;
+          point.introX = Math.cos(angle) * radius;
+          point.introY = Math.sin(angle) * radius * 0.74 + (Math.random() - 0.5) * 3.5;
+          point.introZ = (Math.random() - 0.5) * 8;
+        }
+        point.activeX = point.introX;
+        point.activeY = point.introY;
+        point.activeZ = point.introZ;
+      });
+
+      const positions = new Float32Array(points.length * 3);
+      const colors = new Float32Array(points.length * 3);
+      const baseBlue = new THREE.Color("#0055B7");
+      const brightTeal = new THREE.Color("#00C9A7");
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+      geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+
+      const material = new THREE.PointsMaterial({
+        size: 0.15,
+        transparent: true,
+        opacity: 0.98,
+        vertexColors: true,
+        blending: THREE.AdditiveBlending,
+        sizeAttenuation: true,
+        depthWrite: false
+      });
+
+      const cloud = new THREE.Points(geometry, material);
+      heroGroup.add(cloud);
+
+      const lineGeometry = new THREE.BufferGeometry();
+      const lineMaterial = new THREE.LineBasicMaterial({
+        color: 0x00C9A7,
+        transparent: true,
+        opacity: 0.2,
+        depthWrite: false
+      });
+      const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
+      heroGroup.add(lines);
+
+      const mouse = { x: 999, y: 999, targetX: 999, targetY: 999 };
+
+      function onPointerMove(event) {
+        const rect = container.getBoundingClientRect();
+        if (
+          event.clientX < rect.left ||
+          event.clientX > rect.right ||
+          event.clientY < rect.top ||
+          event.clientY > rect.bottom
+        ) {
+          return;
+        }
+        const nx = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        const ny = -(((event.clientY - rect.top) / rect.height) * 2 - 1);
+        mouse.targetX = nx * 7.3;
+        mouse.targetY = ny * 4.15;
+      }
+
+      function onPointerLeave() {
+        mouse.targetX = 999;
+        mouse.targetY = 999;
+      }
+
+      window.addEventListener("pointermove", onPointerMove, { passive: true });
+      window.addEventListener("blur", onPointerLeave);
+
+      function resize() {
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+      }
+
+      function animate(time) {
+        const t = time * 0.001;
+        const introProgress = Math.min(Math.max((t - 0.15) / 4.8, 0), 1);
+        const introEase = 1 - Math.pow(1 - introProgress, 4);
+        const linePoints = [];
+
+        mouse.x += (mouse.targetX - mouse.x) * 0.09;
+        mouse.y += (mouse.targetY - mouse.y) * 0.09;
+        const mouseActive = Math.abs(mouse.x) < 900 && Math.abs(mouse.y) < 900;
+
+        camera.position.x = (mouseActive ? mouse.x * 0.06 : 0) + Math.sin(t * 0.22) * 0.24;
+        camera.position.y = (mouseActive ? mouse.y * 0.05 : 0) + Math.cos(t * 0.27) * 0.16;
+        camera.position.z = 12.9 - introEase * 1.85 + Math.sin(t * 0.35) * 0.14;
+        camera.lookAt(0, 0, 0);
+
+        stars.rotation.z = -t * 0.03;
+        stars.rotation.y = Math.sin(t * 0.12) * 0.18;
+        stars.material.opacity = 0.22 + introEase * 0.38;
+
+        heroGroup.rotation.z = Math.sin(t * 0.18) * 0.045;
+        heroGroup.rotation.y = Math.sin(t * 0.24) * 0.08;
+
+        rings.forEach((ring) => {
+          ring.rotation.z += ring.userData.spin;
+          const ringScale = 0.92 + introEase * 0.12 + Math.sin(t * 1.15 + ring.userData.pulse) * 0.03;
+          ring.scale.setScalar(ringScale);
+          ring.material.opacity = ring.userData.baseOpacity * (0.35 + introEase * 0.95);
+        });
+
+        streakGroup.rotation.z = -t * 0.18;
+        streaks.forEach((streak, index) => {
+          streak.rotation.z += streak.userData.spin;
+          streak.material.opacity = streak.userData.baseOpacity * (0.42 + introEase * 0.9) * (0.7 + Math.sin(t * 1.4 + index) * 0.18);
+        });
+
+        points.forEach((point, index) => {
+          const baseDriftX = Math.sin(t * 1.1 + point.drift) * 0.09;
+          const baseDriftY = Math.cos(t * 1.05 + point.drift) * 0.09;
+          const targetX = THREE.MathUtils.lerp(point.introX, point.baseX + baseDriftX, introEase);
+          const targetY = THREE.MathUtils.lerp(point.introY, point.baseY + baseDriftY, introEase);
+          const targetZ = THREE.MathUtils.lerp(point.introZ, Math.sin(t * 1.2 + point.drift) * 0.18, introEase);
+
+          let mouseDistance = 99;
+          if (mouseActive) {
+            const mx = mouse.x - point.activeX;
+            const my = mouse.y - point.activeY;
+            mouseDistance = Math.hypot(mx, my);
+            if (mouseDistance < 2.2) {
+              const force = (2.2 - mouseDistance) / 2.2;
+              const angle = Math.atan2(point.activeY - mouse.y, point.activeX - mouse.x);
+              point.velocityX += Math.cos(angle) * force * 0.085;
+              point.velocityY += Math.sin(angle) * force * 0.085;
+              point.velocityZ += force * 0.012;
+            }
+          }
+
+          point.velocityX += (targetX - point.activeX) * 0.035;
+          point.velocityY += (targetY - point.activeY) * 0.035;
+          point.velocityZ += (targetZ - point.activeZ) * 0.028;
+          point.velocityX *= 0.89;
+          point.velocityY *= 0.89;
+          point.velocityZ *= 0.87;
+          point.activeX += point.velocityX || point.baseX;
+          point.activeY += point.velocityY || point.baseY;
+          point.activeZ += point.velocityZ || 0;
+
+          positions[index * 3] = point.activeX;
+          positions[index * 3 + 1] = point.activeY;
+          positions[index * 3 + 2] = point.activeZ;
+
+          const glow = mouseActive ? Math.max(0, 1 - mouseDistance / 2.6) : 0;
+          const flare = Math.max(0, Math.sin(t * 2.6 + point.drift)) * 0.08 + introEase * 0.18;
+          const color = baseBlue.clone().lerp(brightTeal, Math.min(1, glow * 0.92 + flare));
+          colors[index * 3] = color.r;
+          colors[index * 3 + 1] = color.g;
+          colors[index * 3 + 2] = color.b;
+        });
+
+        const dynamicThreshold = 0.76 + introEase * 0.46;
+        let segments = 0;
+        for (let i = 0; i < points.length; i += 1) {
+          for (let j = i + 1; j < points.length; j += 1) {
+            const ax = positions[i * 3];
+            const ay = positions[i * 3 + 1];
+            const az = positions[i * 3 + 2];
+            const bx = positions[j * 3];
+            const by = positions[j * 3 + 1];
+            const bz = positions[j * 3 + 2];
+            const distance = Math.hypot(ax - bx, ay - by, az - bz);
+            if (distance < dynamicThreshold) {
+              linePoints.push(ax, ay, az, bx, by, bz);
+              segments += 1;
+              if (segments > 1800) break;
+            }
+          }
+          if (segments > 1800) break;
+        }
+
+        lineGeometry.setAttribute("position", new THREE.Float32BufferAttribute(linePoints, 3));
+        geometry.attributes.position.needsUpdate = true;
+        geometry.attributes.color.needsUpdate = true;
+        lineGeometry.attributes.position.needsUpdate = true;
+
+        renderer.render(scene, camera);
+        requestAnimationFrame(animate);
+      }
+
+      resize();
+      window.addEventListener("resize", resize);
+      requestAnimationFrame(animate);
+    }
+
+    function initAmbientOrbitScene() {
+      const container = document.querySelector(".ambient-orbit-scene");
+      if (!container || typeof THREE === "undefined") return;
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      container.appendChild(renderer.domElement);
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
+      camera.position.set(0, 0.6, 9.5);
+
+      const group = new THREE.Group();
+      scene.add(group);
+
+      const palette = [
+        "#93C5FD", "#C4B5FF", "#6EE7B7", "#FDBA74", "#0055B7", "#00C9A7", "#FF6B6B",
+        "#A5B4FC", "#F9A8D4", "#67E8F9", "#86EFAC", "#FDE68A", "#D8B4FE", "#BFDBFE"
+      ];
+
+      for (let i = 0; i < 14; i += 1) {
+        const angle = (i / 14) * Math.PI * 2;
+        const radius = 3.2 + Math.sin(i * 0.8) * 0.22;
+        const sphere = new THREE.Mesh(
+          new THREE.SphereGeometry(0.28, 10, 10),
+          new THREE.MeshBasicMaterial({
+            color: palette[i],
+            wireframe: true,
+            transparent: true,
+            opacity: 0.95
+          })
+        );
+        sphere.position.set(
+          Math.cos(angle) * radius,
+          Math.sin(i * 0.65) * 0.44,
+          Math.sin(angle) * radius
+        );
+        sphere.userData.phase = Math.random() * Math.PI * 2;
+        group.add(sphere);
+      }
+
+      function resize() {
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+      }
+
+      function animate(time) {
+        const t = time * 0.001;
+        group.rotation.y += 0.003;
+        group.children.forEach((sphere, index) => {
+          sphere.position.y += Math.sin(t * 0.9 + sphere.userData.phase + index) * 0.003;
+          sphere.rotation.x += 0.01;
+          sphere.rotation.y += 0.008;
+        });
+        renderer.render(scene, camera);
+        requestAnimationFrame(animate);
+      }
+
+      resize();
+      window.addEventListener("resize", resize);
+      requestAnimationFrame(animate);
+    }
+
+    renderSlides();
+    initShipItScene();
+    initAmbientOrbitScene();
+  </script>
+</body>
+</html>
