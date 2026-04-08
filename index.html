@@ -449,6 +449,150 @@
       min-height: 250px;
     }
 
+    .teaching-showcase {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .teaching-showcase .title-stack {
+      gap: 6px;
+    }
+
+    .teaching-showcase .section-title {
+      font-size: clamp(24px, 2.4vw, 36px);
+    }
+
+    .teaching-showcase > .subtle-note {
+      font-size: 12px;
+    }
+
+    .teaching-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .teaching-card {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-height: 0;
+    }
+
+    .teaching-card.card-pad {
+      padding: 10px 10px 9px;
+    }
+
+    .teaching-card .nameplate {
+      font-size: clamp(14px, 1.2vw, 18px);
+      line-height: 1.05;
+    }
+
+    .teaching-photo {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 0.6;
+      border-radius: 12px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at top, rgba(147, 197, 253, 0.20), transparent 58%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(233, 240, 255, 0.86));
+      border: 1px solid rgba(255, 255, 255, 0.92);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    }
+
+    .teaching-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 28%;
+      display: block;
+    }
+
+    .teaching-photo img.parsa-photo {
+      object-position: center 24%;
+    }
+
+    .teaching-photo img.fahim-photo {
+      object-position: center 30%;
+    }
+
+    .teaching-photo img.liz-photo {
+      object-position: center 36%;
+    }
+
+    .teaching-photo img.mohsen-photo {
+      object-position: center 30%;
+    }
+
+    .teaching-photo img.stash-photo {
+      object-position: center 34%;
+    }
+
+    .teaching-photo img.mahdi-photo {
+      object-position: center 34%;
+    }
+
+    .teaching-photo img.kelly-photo {
+      object-position: center 34%;
+    }
+
+    .teaching-card .role-pill {
+      padding: 5px 8px;
+      border-radius: 999px;
+      font-size: 8px;
+      letter-spacing: 0.08em;
+      align-self: flex-start;
+    }
+
+    .teaching-summary {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 10px 12px;
+      align-items: center;
+    }
+
+    .teaching-summary.card-pad {
+      padding: 10px 12px;
+    }
+
+    .teaching-summary .body-text {
+      font-size: clamp(11px, 0.86vw, 13px);
+      line-height: 1.3;
+    }
+
+    .teaching-summary .badge-row {
+      gap: 6px;
+    }
+
+    .teaching-summary .metric-pill {
+      padding: 5px 8px;
+      font-size: 8px;
+      letter-spacing: 0.08em;
+    }
+
+    .client-logo-shell {
+      min-height: 78px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.84);
+      border: 1px solid rgba(255, 255, 255, 0.94);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.96);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .client-logo {
+      max-width: 100%;
+      max-height: 48px;
+      object-fit: contain;
+      display: block;
+    }
+
     .nameplate {
       font-size: clamp(28px, 2.6vw, 40px);
       font-weight: 800;
@@ -1361,6 +1505,10 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
+      .teaching-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
       .flow-row {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
@@ -1382,6 +1530,14 @@
       }
 
       .grid-three {
+        grid-template-columns: 1fr;
+      }
+
+      .teaching-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .teaching-summary {
         grid-template-columns: 1fr;
       }
 
@@ -1849,39 +2005,77 @@
         {
           title: "The People Who Made This Happen",
           ambient: false,
-          notes: "Quick shoutout to the team. Parsa designed and runs this course. I coordinated the TA team and the logistics behind tonight's event. And our TAs - Liz, Mohsen, Stash, and Mahdi - were in the trenches with your teams every single week. But the real stars tonight are the students. Let's meet who they built for.",
+          notes: "Quick shoutout to the team. Parsa designed and runs this course. I coordinated the TA team and the logistics behind tonight's event. And our TAs - Liz, Kelly, Mohsen, Stash, and Mahdi - were in the trenches with your teams every single week. But the real stars tonight are the students. Let's meet who they built for.",
           theme: "light",
           orbs: [
             { size: 400, color: "rgba(147, 197, 253, 0.58)", opacity: 0.10, duration: 31, delay: -11, driftX: 18, driftY: -12, top: "-8%", left: "8%" },
             { size: 460, color: "rgba(110, 231, 183, 0.56)", opacity: 0.10, duration: 38, delay: -3, driftX: -16, driftY: 18, top: "58%", left: "70%" }
           ],
           html: `
-            <div class="stacked-layout" style="max-width: none;">
+            <div class="teaching-showcase">
               <div class="title-stack" style="text-align: center; align-items: center;">
                 <p class="eyebrow" data-reveal>Teaching Team</p>
                 <h2 class="section-title" data-reveal>The People Who Made This Happen</h2>
               </div>
-              <div class="grid-three">
-                <div class="glass-card profile-card card-pad" data-reveal>
-                  <p class="eyebrow">Instructor</p>
+              <div class="teaching-grid">
+                <div class="glass-card teaching-card card-pad" data-reveal>
+                  <div class="teaching-photo">
+                    <img class="parsa-photo" src="images/parsa.jpg" alt="Portrait of Parsa">
+                  </div>
                   <h3 class="nameplate">Parsa</h3>
                   <span class="role-pill badge">Instructor &middot; CPSC 319</span>
-                  <p class="body-text">Course design, client relationships, and the vision behind the showcase.</p>
                 </div>
-                <div class="glass-card profile-card card-pad" data-reveal>
-                  <p class="eyebrow">TA Coordinator</p>
+                <div class="glass-card teaching-card card-pad" data-reveal>
+                  <div class="teaching-photo">
+                    <img class="fahim-photo" src="images/fahim.png" alt="Portrait of Fahim">
+                  </div>
                   <h3 class="nameplate">Fahim</h3>
                   <span class="role-pill badge">TA Coordinator</span>
-                  <p class="body-text">Course logistics, rubrics, TA ops, and the event coordination behind tonight's showcase.</p>
                 </div>
-                <div class="glass-card profile-card card-pad" data-reveal>
-                  <p class="eyebrow">Teaching Assistants</p>
-                  <h3 class="nameplate">Liz &middot; Mohsen &middot; Stash &middot; Mahdi</h3>
+                <div class="glass-card teaching-card card-pad" data-reveal>
+                  <div class="teaching-photo">
+                    <img class="liz-photo" src="images/liz.png" alt="Portrait of Liz">
+                  </div>
+                  <h3 class="nameplate">Liz</h3>
                   <span class="role-pill badge">Teaching Assistants</span>
-                  <p class="body-text">Weekly mentorship, code reviews, grading, and keeping 14 teams on track.</p>
+                </div>
+                <div class="glass-card teaching-card card-pad" data-reveal>
+                  <div class="teaching-photo">
+                    <img class="kelly-photo" src="images/kelly.png" alt="Portrait of Kelly">
+                  </div>
+                  <h3 class="nameplate">Kelly</h3>
+                  <span class="role-pill badge">Teaching Assistants</span>
+                </div>
+                <div class="glass-card teaching-card card-pad" data-reveal>
+                  <div class="teaching-photo">
+                    <img class="mohsen-photo" src="images/mohsen.png" alt="Portrait of Mohsen">
+                  </div>
+                  <h3 class="nameplate">Mohsen</h3>
+                  <span class="role-pill badge">Teaching Assistants</span>
+                </div>
+                <div class="glass-card teaching-card card-pad" data-reveal>
+                  <div class="teaching-photo">
+                    <img class="stash-photo" src="images/stash.png" alt="Portrait of Stash">
+                  </div>
+                  <h3 class="nameplate">Stash</h3>
+                  <span class="role-pill badge">Teaching Assistants</span>
+                </div>
+                <div class="glass-card teaching-card card-pad" data-reveal>
+                  <div class="teaching-photo">
+                    <img class="mahdi-photo" src="images/mahdi.png" alt="Portrait of Mahdi">
+                  </div>
+                  <h3 class="nameplate">Mahdi</h3>
+                  <span class="role-pill badge">Teaching Assistants</span>
                 </div>
               </div>
-              <p class="subtle-note" data-reveal style="text-align: center;">And 69 students who showed up every week and built something real.</p>
+              <div class="glass-card teaching-summary card-pad" data-reveal>
+                <div class="badge-row">
+                  <span class="metric-pill">1 Instructor</span>
+                  <span class="metric-pill">1 Coordinator</span>
+                  <span class="metric-pill">5 TAs</span>
+                </div>
+                <p class="body-text">Course design, mentorship, code reviews, grading, and showcase logistics behind a semester powered by 69 students who built something real.</p>
+              </div>
             </div>
           `
         },
@@ -1902,26 +2096,41 @@
               </div>
               <div class="flow-row">
                 <div class="flow-card" style="--accent: #0055B7;" data-reveal>
+                  <div class="client-logo-shell">
+                    <img class="client-logo" src="images/benevitylogo.jpeg" alt="Benevity logo">
+                  </div>
                   <h3 class="mini-title">Benevity</h3>
                   <span class="metric-pill">3 Teams</span>
                   <p class="mini-copy">Corporate giving and volunteering platform</p>
                 </div>
                 <div class="flow-card" style="--accent: #00C9A7;" data-reveal>
+                  <div class="client-logo-shell">
+                    <img class="client-logo" src="images/surreyfoodbanklogo.jpg" alt="Surrey Food Bank logo">
+                  </div>
                   <h3 class="mini-title">Surrey Food Bank</h3>
                   <span class="metric-pill">3 Teams</span>
                   <p class="mini-copy">Community food security and distribution</p>
                 </div>
                 <div class="flow-card" style="--accent: #FDBA74;" data-reveal>
+                  <div class="client-logo-shell">
+                    <img class="client-logo" src="images/auntleahslogo.png" alt="Aunt Leah's logo">
+                  </div>
                   <h3 class="mini-title">Aunt Leah's</h3>
                   <span class="metric-pill">3 Teams</span>
                   <p class="mini-copy">Housing and life skills for youth aging out of foster care</p>
                 </div>
                 <div class="flow-card" style="--accent: #C4B5FF;" data-reveal>
+                  <div class="client-logo-shell">
+                    <img class="client-logo" src="images/featherslogo.svg" alt="FeathersJS logo">
+                  </div>
                   <h3 class="mini-title">FeathersJS</h3>
                   <span class="metric-pill">3 Teams</span>
                   <p class="mini-copy">Open-source real-time API framework</p>
                 </div>
                 <div class="flow-card" style="--accent: #93C5FD;" data-reveal>
+                  <div class="client-logo-shell">
+                    <img class="client-logo" src="images/openwebuilogo.png" alt="Open WebUI logo">
+                  </div>
                   <h3 class="mini-title">Open WebUI</h3>
                   <span class="metric-pill">2 Teams</span>
                   <p class="mini-copy">Self-hosted AI interface platform</p>
@@ -2069,7 +2278,7 @@
                 </div>
                 <div class="glass-card thank-you-card card-pad" data-reveal>
                   <p class="eyebrow">🧑‍🏫 Teaching Team</p>
-                  <p class="body-text">Parsa, Fahim, Liz, Mohsen, Stash, and Mahdi - for making this course work behind the scenes.</p>
+                  <p class="body-text">Parsa, Fahim, Liz, Kelly, Mohsen, Stash, and Mahdi - for making this course work behind the scenes.</p>
                 </div>
                 <div class="glass-card thank-you-card card-pad celebrate-wash" data-reveal>
                   <p class="eyebrow">🌐 Guests</p>
